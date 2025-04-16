@@ -30,20 +30,28 @@ void TaskHttpServer(void* parameter) {
     // LED control endpoint - conditionally register if LED control is enabled
     #if FEATURE_LED_CONTROL_ENABLED
     server.on("/led", HTTP_GET, [&server]() {
-        int pwmValue = 0;
-        
-        // Проверяем, пришел ли параметр brightness для плавного управления
+
         if (server.hasArg("brightness")) {
-            // Получаем значение яркости (0-100)
-            int brightness = server.arg("brightness").toInt();
-            
-            // Преобразуем значение яркости в PWM значение (0-4095)
-            // Используем максимум из LED_RESOLUTION (12 бит = 4095)
-            pwmValue = map(brightness, 0, 100, 0, (1 << LED_RESOLUTION) - 1);
+            int brightness = server.arg("brightness").toInt(); // Expect a value from 0–100
+
+            // Clamp brightness value between 0 and 100
+            brightness = constrain(brightness, 0, 100);
+
+            // Apply gamma correction (γ ≈ 2.2)
+            float gamma = 2.2;
+            float normalized = brightness / 100.0f;
+            float corrected = pow(normalized, gamma);  // Apply gamma curve
+
+            // Scale to PWM range (e.g., 0–4095 for 12-bit resolution)
+            int maxPWM = (1 << LED_RESOLUTION) - 1;
+            int pwmValue = static_cast<int>(corrected * maxPWM + 0.5f); // Round to nearest integer
+
+            // Apply the gamma-corrected PWM value
+            ledcWrite(LED_CHANNEL, pwmValue);
         }
-        
-        ledcWrite(LED_CHANNEL, pwmValue);
-        server.send(200, "text/plain", "OK");
+
+    // Respond to the client
+    server.send(200, "text/plain", "OK");
     });
     #endif
 
