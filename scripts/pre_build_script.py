@@ -10,8 +10,8 @@ def generate_html_header(target, source, env):
     
     print(f"Converting and compressing {html_file} to {header_file}")
     
-    # Read the HTML content
-    with open(html_file, 'r') as f:
+    # Read the HTML content with explicit UTF-8 encoding
+    with open(html_file, 'r', encoding='utf-8') as f:
         content = f.read()
     
     # Compress with gzip
@@ -61,4 +61,4 @@ env.Append(BUILDERS={'HTMLHeader': html_builder})
 html_target = env.HTMLHeader(html_header, html_source)
 
 # Make the compilation depend on the header file
-env.Depends('$BUILD_DIR/${PROGNAME}', html_target) 
+env.Depends('$BUILD_DIR/${PROGNAME}', html_target)

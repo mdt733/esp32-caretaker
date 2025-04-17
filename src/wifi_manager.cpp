@@ -1,5 +1,6 @@
 #include "wifi_manager.h"
 #include <Arduino.h>
+#include "secrets.h"
 
 void initWiFi() {
     // Загрузка учетных данных из .env
